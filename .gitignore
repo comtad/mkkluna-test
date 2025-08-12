@@ -1,0 +1,53 @@
+# Игнорируем директорию vendor (зависимости PHP)
+vendor
+
+# Игнорируем директорию node_modules (зависимости JS)
+node_modules
+
+# Игнорируем файл .env и все его вариации
+.env
+.env.backup
+.env.production
+.env.local
+
+# Игнорируем временные файлы Homestead
+Homestead.json
+Homestead.yaml
+
+# Игнорируем файлы Vagrant
+.vagrant
+
+# Игнорируем кэш и логи
+storage/logs/*.log
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/framework/testing/*
+
+# Игнорируем сгенерированные файлы
+public/storage
+public/hot
+public/.webmanifest
+
+# Игнорируем файлы IDE и редакторов
+.idea
+.vscode
+*.swp
+*.swo
+Thumbs.db
+.DS_Store
+
+# Игнорируем npm и yarn файлы
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Игнорируем другие временные файлы
+.phpunit.result.cache
+.php-cs-fixer.cache
+.phpstorm.meta.php
+_ide_helper.php
+_ide_helper_models.php
+
+# Игнорируем тестовые покрытия
+coverage
