@@ -1,51 +1,42 @@
-FROM php:8.3-fpm
+FROM php:8.2-fpm
+
+# Получаем аргументы сборки
+ARG USER_UID
+ARG USER_GID
 
 # Установка зависимостей
 RUN apt-get update && apt-get install -y \
-    build-essential \
-    libpng-dev \
-    libjpeg62-turbo-dev \
-    libfreetype6-dev \
-    locales \
+    libpq-dev \
+    libzip-dev \
     zip \
-    jpegoptim optipng pngquant gifsicle \
-    vim \
     unzip \
     git \
-    curl \
-    libpq-dev \
-    libzip-dev
+    && docker-php-ext-install pdo pdo_pgsql zip
 
-# Очистка кэша
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Установка расширений PHP
-RUN docker-php-ext-install pdo_pgsql pgsql zip exif pcntl
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg
-RUN docker-php-ext-install gd
+# Создаем пользователя с заданными UID/GID
+RUN groupadd -g ${USER_GID} www && \
+    useradd -u ${USER_UID} -ms /bin/bash -g www www
 
 # Установка Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Добавление пользователя для приложения Laravel с UID=1000 и GID=1000
-RUN groupadd -g 1000 www
-RUN useradd -u 1000 -ms /bin/bash -g www www
-
 # Рабочая директория
 WORKDIR /var/www/html
 
-# Копирование кода приложения из корня проекта
-COPY . /var/www/html
+# Копируем ВЕСЬ проект
+COPY --chown=www:www . .
 
-# Установка зависимостей Composer (теперь composer.json должен быть в корне)
-RUN composer install --no-interaction --optimize-autoloader
-
-# Изменение прав доступа
-RUN chown -R www:www /var/www/html
-
-# Переключение на пользователя www
+# Переключаемся на пользователя www
 USER www
 
-# Экспорт порта и запуск PHP-FPM
-EXPOSE 9000
+# Установка зависимостей Composer
+RUN composer install --no-interaction --optimize-autoloader
+
+# Настройка приложения
+RUN test -f .env || cp .env.example .env && \
+    php artisan key:generate && \
+    chmod -R 775 storage bootstrap/cache && \
+    php artisan optimize
+
+# Точка входа
 CMD ["php-fpm"]
