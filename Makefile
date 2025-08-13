@@ -1,6 +1,5 @@
 CURRENT_UID := $(shell id -u)
 CURRENT_GID := $(shell id -g)
-
 .PHONY: build up down restart
 
 build:

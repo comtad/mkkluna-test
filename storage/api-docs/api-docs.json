@@ -1,0 +1,627 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Твой API Справочник Организаций",
+        "description": "API для работы с организациями, зданиями и видами деятельности",
+        "contact": {
+            "email": "твой@email.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8000",
+            "description": "Локальный сервер"
+        }
+    ],
+    "paths": {
+        "/api/buildings/organizations": {
+            "get": {
+                "tags": [
+                    "Buildings"
+                ],
+                "summary": "Получить организации в здании",
+                "description": "Возвращает информацию о здании со списком всех организаций и их телефонами",
+                "operationId": "getOrganizationsByBuilding",
+                "parameters": [
+                    {
+                        "name": "api_key",
+                        "in": "query",
+                        "description": "Ключ доступа API",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "123"
+                    },
+                    {
+                        "name": "building_id",
+                        "in": "query",
+                        "description": "ID здания",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        },
+                        "example": "3"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успешный ответ",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BuildingWithOrganizations"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Неверный API ключ",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Invalid API key"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Здание не найдено",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Building not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Ошибка валидации",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The building id field is required."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "building_id": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The building id field is required."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/activities/organizations": {
+            "get": {
+                "tags": [
+                    "Activities"
+                ],
+                "summary": "Получить организации по виду деятельности",
+                "description": "Возвращает вид деятельности с организациями, относящимися к нему",
+                "operationId": "getOrganizationsByActivity",
+                "parameters": [
+                    {
+                        "name": "api_key",
+                        "in": "query",
+                        "description": "Ключ доступа API",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "123"
+                    },
+                    {
+                        "name": "activity_name",
+                        "in": "query",
+                        "description": "Название вида деятельности",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "Рестораны"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успешный ответ",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ActivityWithOrganizations"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Неверный API ключ",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Invalid API key"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Вид деятельности не найден",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Activity not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/organizations/nearby": {
+            "get": {
+                "tags": [
+                    "Geosearch"
+                ],
+                "summary": "Поиск организаций в радиусе от точки",
+                "description": "Возвращает организации, находящиеся в указанном радиусе (в метрах) от заданной точки",
+                "operationId": "getOrganizationsInRadius",
+                "parameters": [
+                    {
+                        "name": "api_key",
+                        "in": "query",
+                        "description": "Ключ доступа API",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "123"
+                    },
+                    {
+                        "name": "lat",
+                        "in": "query",
+                        "description": "Широта центра поиска",
+                        "required": true,
+                        "schema": {
+                            "type": "number",
+                            "format": "float"
+                        },
+                        "example": "55.6938523"
+                    },
+                    {
+                        "name": "lng",
+                        "in": "query",
+                        "description": "Долгота центра поиска",
+                        "required": true,
+                        "schema": {
+                            "type": "number",
+                            "format": "float"
+                        },
+                        "example": "37.4527517"
+                    },
+                    {
+                        "name": "radius",
+                        "in": "query",
+                        "description": "Радиус поиска в метрах",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": "5000"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успешный ответ",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/OrganizationWithBuilding"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Ошибка валидации",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The lat field is required."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Неверный API ключ",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Invalid API key"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/organizations/in-rectangle": {
+            "get": {
+                "tags": [
+                    "Geosearch"
+                ],
+                "summary": "Поиск организаций в прямоугольной области",
+                "description": "Возвращает организации, находящиеся в пределах прямоугольной области, заданной юго-западной и северо-восточной точками",
+                "operationId": "getOrganizationsInRectangle",
+                "parameters": [
+                    {
+                        "name": "api_key",
+                        "in": "query",
+                        "description": "Ключ доступа API",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "123"
+                    },
+                    {
+                        "name": "sw_lat",
+                        "in": "query",
+                        "description": "Широта юго-западного угла",
+                        "required": true,
+                        "schema": {
+                            "type": "number",
+                            "format": "float"
+                        },
+                        "example": "55.6688523"
+                    },
+                    {
+                        "name": "sw_lng",
+                        "in": "query",
+                        "description": "Долгота юго-западного угла",
+                        "required": true,
+                        "schema": {
+                            "type": "number",
+                            "format": "float"
+                        },
+                        "example": "37.4277517"
+                    },
+                    {
+                        "name": "ne_lat",
+                        "in": "query",
+                        "description": "Широта северо-восточного угла",
+                        "required": true,
+                        "schema": {
+                            "type": "number",
+                            "format": "float"
+                        },
+                        "example": "55.7188523"
+                    },
+                    {
+                        "name": "ne_lng",
+                        "in": "query",
+                        "description": "Долгота северо-восточного угла",
+                        "required": true,
+                        "schema": {
+                            "type": "number",
+                            "format": "float"
+                        },
+                        "example": "37.4777517"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успешный ответ",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/OrganizationWithBuilding"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Ошибка валидации",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The sw_lat field is required."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Неверный API ключ",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Invalid API key"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ActivityTree": {
+                "title": "Activity Tree",
+                "description": "Дерево видов деятельности с вложенными элементами",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Рестораны"
+                    },
+                    "depth": {
+                        "type": "integer",
+                        "example": 0
+                    },
+                    "children": {
+                        "description": "Дочерние элементы дерева",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ActivityTree"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "ActivityWithOrganizations": {
+                "title": "Activity with Organizations",
+                "description": "Вид деятельности с организациями",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Рестораны"
+                    },
+                    "depth": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "organizations": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/OrganizationWithBuilding"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "Building": {
+                "title": "Building Info",
+                "description": "Информация о здании",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 3
+                    },
+                    "address": {
+                        "type": "string",
+                        "example": "г. Москва, Очаковское шоссе, дом 14, строение 8"
+                    },
+                    "coordinates": {
+                        "properties": {
+                            "lat": {
+                                "type": "number",
+                                "format": "float",
+                                "example": 55.6938523
+                            },
+                            "lng": {
+                                "type": "number",
+                                "format": "float",
+                                "example": 37.4527517
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "BuildingWithOrganizations": {
+                "title": "Building with Organizations",
+                "description": "Информация о здании с организациями",
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/Building"
+                    },
+                    {
+                        "properties": {
+                            "organizations": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/OrganizationWithPhones"
+                                }
+                            }
+                        },
+                        "type": "object"
+                    }
+                ]
+            },
+            "FullOrganization": {
+                "title": "Full Organization Info",
+                "description": "Полная информация об организации с отношениями",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 6054
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "ООО Рога и Копыта"
+                    },
+                    "phones": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/OrganizationPhone"
+                        }
+                    },
+                    "building": {
+                        "$ref": "#/components/schemas/Building"
+                    },
+                    "activities": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ActivityTree"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "OrganizationPhone": {
+                "title": "Organization Phone",
+                "description": "Телефон организации",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 12152
+                    },
+                    "number": {
+                        "type": "string",
+                        "example": "(35222) 72-6391"
+                    }
+                },
+                "type": "object"
+            },
+            "OrganizationWithBuilding": {
+                "title": "Organization with Building Info",
+                "description": "Организация с информацией о здании",
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/OrganizationWithPhones"
+                    },
+                    {
+                        "properties": {
+                            "building": {
+                                "$ref": "#/components/schemas/Building"
+                            }
+                        },
+                        "type": "object"
+                    }
+                ]
+            },
+            "OrganizationWithPhones": {
+                "title": "Organization with Phones",
+                "description": "Организация с телефонами",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 6054
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "ОАО ЛифтТехПивСбыт"
+                    },
+                    "phones": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/OrganizationPhone"
+                        }
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "api_key": {
+                "type": "apiKey",
+                "name": "api_key",
+                "in": "query"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Buildings",
+            "description": "Buildings"
+        },
+        {
+            "name": "Activities",
+            "description": "Activities"
+        },
+        {
+            "name": "Geosearch",
+            "description": "Geosearch"
+        }
+    ]
+}
