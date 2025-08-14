@@ -1,61 +1,62 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Инструкция по запуску проекта
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Требования
+- Docker
+- Docker Compose
+- Поддержка Makefile
 
-## About Laravel
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### 1. Клонирование проекта
+```bash
+git clone https://github.com/comtad/mkkluna-test
+cd repo
+```
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Запуск контейнера
+```bash
+make build
+make up
+```
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Подключение к контейнеру
+```bash
+make shell
+```
 
-## Learning Laravel
+## Установка зависимостей и подготовка окружения
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate --seed
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Доступ к приложению
+- Приложение: [http://localhost/](http://localhost/)
+- Документация по API: [http://localhost/api/documentation](http://localhost/api/documentation)
+- Laravel Telescope: [http://localhost/telescope/requests](http://localhost/telescope/requests)
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+---
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+# API-эндпоинты
 
-## Laravel Sponsors
+## Список всех организаций, находящихся в конкретном здании
+[http://localhost/api/buildings/organizations?api_key=123&building_id=2](http://localhost/api/buildings/organizations?api_key=123&building_id=2)
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Список всех организаций, относящихся к указанному виду деятельности
+[http://localhost/api/activities/organizations?api_key=123&activity_name=Рестораны](http://localhost/api/activities/organizations?api_key=123&activity_name=Рестораны)
 
-### Premium Partners
+## Список организаций в заданном радиусе относительно точки
+[http://localhost/api/organizations/nearby?api_key=123&lat=55.7069&lng=37.5422026&radius=1000](http://localhost/api/organizations/nearby?api_key=123&lat=55.7069&lng=37.5422026&radius=1000)
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## Список организаций в прямоугольной области (по координатам)
+[http://localhost/api/organizations/in-rectangle?api_key=123&sw_lat=55.7&sw_lng=37.5&ne_lat=55.8&ne_lng=37.6](http://localhost/api/organizations/in-rectangle?api_key=123&sw_lat=55.7&sw_lng=37.5&ne_lat=55.8&ne_lng=37.6)
 
-## Contributing
+## Информация об организации по идентификатору
+[http://localhost/api/organizations/by-id?id=7&api_key=123](http://localhost/api/organizations/by-id?id=7&api_key=123)
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Поиск по виду деятельности с учётом вложенных категорий
+[http://localhost/api/organizations/activity-tree?api_key=123&activity_name=рест](http://localhost/api/organizations/activity-tree?api_key=123&activity_name=рест)
 
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Поиск организации по названию
+[http://localhost/api/organizations/by-name?api_key=123&name=ЗАО](http://localhost/api/organizations/by-name?api_key=123&name=ЗАО)
