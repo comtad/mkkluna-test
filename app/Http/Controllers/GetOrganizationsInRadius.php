@@ -3,68 +3,78 @@
 namespace App\Http\Controllers;
 
 use App\Models\Building;
-use App\Http\Resources\OrganizationResource;
+use App\Http\Resources\OrganizationWithPhonesResource;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use Illuminate\Http\Request;
+
 /**
  * @OA\Get(
  *     path="/api/organizations/nearby",
- *     summary="Поиск организаций в радиусе от точки",
- *     description="Возвращает организации, находящиеся в указанном радиусе (в метрах) от заданной точки",
+ *     summary="Поиск организаций в заданном радиусе",
+ *     description="Находит организации, расположенные в указанном радиусе от заданной географической точки. Возвращает список организаций с телефонными номерами.",
  *     operationId="getOrganizationsInRadius",
- *     tags={"Geosearch"},
+ *     tags={"Организации"},
  *     @OA\Parameter(
  *         name="api_key",
  *         in="query",
+ *         description="Ключ API для аутентификации.",
  *         required=true,
- *         description="Ключ доступа API",
- *         example="123",
- *         @OA\Schema(type="string")
+ *         @OA\Schema(type="string"),
+ *         example="123"
  *     ),
  *     @OA\Parameter(
  *         name="lat",
  *         in="query",
+ *         description="Широта центральной точки (от -90 до 90).",
  *         required=true,
- *         description="Широта центра поиска",
- *         example="55.6938523",
- *         @OA\Schema(type="number", format="float")
+ *         @OA\Schema(type="number", minimum=-90, maximum=90),
+ *         example=55.7069
  *     ),
  *     @OA\Parameter(
  *         name="lng",
  *         in="query",
+ *         description="Долгота центральной точки (от -180 до 180).",
  *         required=true,
- *         description="Долгота центра поиска",
- *         example="37.4527517",
- *         @OA\Schema(type="number", format="float")
+ *         @OA\Schema(type="number", minimum=-180, maximum=180),
+ *         example=37.5422026
  *     ),
  *     @OA\Parameter(
  *         name="radius",
  *         in="query",
+ *         description="Радиус поиска в метрах (минимум 0).",
  *         required=true,
- *         description="Радиус поиска в метрах",
- *         example="5000",
- *         @OA\Schema(type="integer")
+ *         @OA\Schema(type="integer", minimum=0),
+ *         example=1000
  *     ),
  *     @OA\Response(
  *         response=200,
- *         description="Успешный ответ",
+ *         description="Успех. Список организаций",
  *         @OA\JsonContent(
  *             type="array",
- *             @OA\Items(ref="#/components/schemas/OrganizationWithBuilding")
+ *             @OA\Items(ref="#/components/schemas/OrganizationWithPhonesResource")
  *         )
  *     ),
  *     @OA\Response(
- *         response=400,
+ *         response=404,
+ *         description="Не найдено",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="Организации не найдены")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=422,
  *         description="Ошибка валидации",
  *         @OA\JsonContent(
- *             @OA\Property(property="message", type="string", example="The lat field is required.")
- *         )
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Неверный API ключ",
- *         @OA\JsonContent(
- *             @OA\Property(property="error", type="string", example="Invalid API key")
+ *             @OA\Property(property="message", type="string", example="The lat field is required."),
+ *             @OA\Property(
+ *                 property="errors",
+ *                 type="object",
+ *                 @OA\Property(
+ *                     property="lat",
+ *                     type="array",
+ *                     @OA\Items(type="string", example="The lat field is required.")
+ *                 )
+ *             )
  *         )
  *     )
  * )
@@ -91,6 +101,10 @@ class GetOrganizationsInRadius extends Controller
 
         $organizations = $buildings->flatMap->organizations;
 
-        return OrganizationResource::collection($organizations);
+        if ($organizations->isEmpty()) {
+            return response()->json(['error' => 'Организации не найдены'], 404);
+        }
+
+        return OrganizationWithPhonesResource::collection($organizations);
     }
 }

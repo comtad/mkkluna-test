@@ -2,77 +2,86 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\OrganizationWithPhonesResource;
 use App\Models\Building;
-use App\Http\Resources\OrganizationResource;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+
 /**
  * @OA\Get(
  *     path="/api/organizations/in-rectangle",
  *     summary="Поиск организаций в прямоугольной области",
- *     description="Возвращает организации, находящиеся в пределах прямоугольной области, заданной юго-западной и северо-восточной точками",
+ *     description="Находит организации, расположенные в указанной прямоугольной области на карте (bounding box). Возвращает список организаций с телефонными номерами.",
  *     operationId="getOrganizationsInRectangle",
- *     tags={"Geosearch"},
+ *     tags={"Организации"},
  *     @OA\Parameter(
  *         name="api_key",
  *         in="query",
+ *         description="Ключ API для аутентификации.",
  *         required=true,
- *         description="Ключ доступа API",
- *         example="123",
- *         @OA\Schema(type="string")
+ *         @OA\Schema(type="string"),
+ *         example="123"
  *     ),
  *     @OA\Parameter(
  *         name="sw_lat",
  *         in="query",
+ *         description="Широта юго-западного угла области (от -90 до 90).",
  *         required=true,
- *         description="Широта юго-западного угла",
- *         example="55.6688523",
- *         @OA\Schema(type="number", format="float")
+ *         @OA\Schema(type="number", minimum=-90, maximum=90),
+ *         example=55.7
  *     ),
  *     @OA\Parameter(
  *         name="sw_lng",
  *         in="query",
+ *         description="Долгота юго-западного угла области (от -180 до 180).",
  *         required=true,
- *         description="Долгота юго-западного угла",
- *         example="37.4277517",
- *         @OA\Schema(type="number", format="float")
+ *         @OA\Schema(type="number", minimum=-180, maximum=180),
+ *         example=37.5
  *     ),
  *     @OA\Parameter(
  *         name="ne_lat",
  *         in="query",
+ *         description="Широта северо-восточного угла области (от -90 до 90).",
  *         required=true,
- *         description="Широта северо-восточного угла",
- *         example="55.7188523",
- *         @OA\Schema(type="number", format="float")
+ *         @OA\Schema(type="number", minimum=-90, maximum=90),
+ *         example=55.8
  *     ),
  *     @OA\Parameter(
  *         name="ne_lng",
  *         in="query",
+ *         description="Долгота северо-восточного угла области (от -180 до 180).",
  *         required=true,
- *         description="Долгота северо-восточного угла",
- *         example="37.4777517",
- *         @OA\Schema(type="number", format="float")
+ *         @OA\Schema(type="number", minimum=-180, maximum=180),
+ *         example=37.6
  *     ),
  *     @OA\Response(
  *         response=200,
- *         description="Успешный ответ",
+ *         description="Успех. Список организаций",
  *         @OA\JsonContent(
  *             type="array",
- *             @OA\Items(ref="#/components/schemas/OrganizationWithBuilding")
+ *             @OA\Items(ref="#/components/schemas/OrganizationWithPhonesResource")
  *         )
  *     ),
  *     @OA\Response(
- *         response=400,
+ *         response=404,
+ *         description="Не найдено",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="error", type="string", example="Организации не найдены")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=422,
  *         description="Ошибка валидации",
  *         @OA\JsonContent(
- *             @OA\Property(property="message", type="string", example="The sw_lat field is required.")
- *         )
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Неверный API ключ",
- *         @OA\JsonContent(
- *             @OA\Property(property="error", type="string", example="Invalid API key")
+ *             @OA\Property(property="message", type="string", example="The sw lat field is required."),
+ *             @OA\Property(
+ *                 property="errors",
+ *                 type="object",
+ *                 @OA\Property(
+ *                     property="sw_lat",
+ *                     type="array",
+ *                     @OA\Items(type="string", example="The sw lat field is required.")
+ *                 )
+ *             )
  *         )
  *     )
  * )
@@ -99,6 +108,10 @@ class GetOrganizationsInRectangle extends Controller
 
         $organizations = $buildings->flatMap->organizations;
 
-        return OrganizationResource::collection($organizations);
+        if ($organizations->isEmpty()) {
+            return response()->json(['error' => 'Организации не найдены'], 404);
+        }
+
+        return OrganizationWithPhonesResource::collection($organizations);
     }
 }

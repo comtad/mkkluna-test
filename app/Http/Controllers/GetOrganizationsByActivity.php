@@ -6,51 +6,60 @@ use App\Models\Activity;
 use App\Http\Resources\ActivityWithOrganizationsResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+
 /**
  * @OA\Get(
  *     path="/api/activities/organizations",
- *     summary="Получить организации по виду деятельности",
- *     description="Возвращает вид деятельности с организациями, относящимися к нему",
+ *     summary="Получение списка организаций по виду деятельности",
+ *     description="Находит вид деятельности по названию и возвращает связанные организации с телефонными номерами. Сначала выполняется точный поиск, при отсутствии результатов — частичный поиск с сортировкой по длине названия.",
  *     operationId="getOrganizationsByActivity",
- *     tags={"Activities"},
+ *     tags={"Виды деятельности"},
  *     @OA\Parameter(
  *         name="api_key",
  *         in="query",
+ *         description="Ключ API для аутентификации.",
  *         required=true,
- *         description="Ключ доступа API",
- *         example="123",
- *         @OA\Schema(type="string")
+ *         @OA\Schema(type="string"),
+ *         example="123"
  *     ),
  *     @OA\Parameter(
  *         name="activity_name",
  *         in="query",
+ *         description="Название вида деятельности (минимум 3 символа).",
  *         required=true,
- *         description="Название вида деятельности",
- *         example="Рестораны",
- *         @OA\Schema(type="string")
+ *         @OA\Schema(type="string", minLength=3),
+ *         example="Рестораны"
  *     ),
  *     @OA\Response(
  *         response=200,
- *         description="Успешный ответ",
- *         @OA\JsonContent(ref="#/components/schemas/ActivityWithOrganizations")
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="Неверный API ключ",
- *         @OA\JsonContent(
- *             @OA\Property(property="error", type="string", example="Invalid API key")
- *         )
+ *         description="Успех. Данные вида деятельности с организациями",
+ *         @OA\JsonContent(ref="#/components/schemas/ActivityWithOrganizationsResource")
  *     ),
  *     @OA\Response(
  *         response=404,
- *         description="Вид деятельности не найден",
+ *         description="Не найдено",
  *         @OA\JsonContent(
- *             @OA\Property(property="error", type="string", example="Activity not found")
+ *             @OA\Property(property="error", type="string", example="Вид деятельности не найден")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=422,
+ *         description="Ошибка валидации",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="The activity name must be at least 3 characters."),
+ *             @OA\Property(
+ *                 property="errors",
+ *                 type="object",
+ *                 @OA\Property(
+ *                     property="activity_name",
+ *                     type="array",
+ *                     @OA\Items(type="string", example="The activity name must be at least 3 characters.")
+ *                 )
+ *             )
  *         )
  *     )
  * )
  */
-
 class GetOrganizationsByActivity extends Controller
 {
     public function __invoke(Request $request)
@@ -72,7 +81,7 @@ class GetOrganizationsByActivity extends Controller
                 ->first();
 
             if (!$activity) {
-                return response()->json(['error' => 'Activity not found'], 404);
+                return response()->json(['error' => 'Вид деятельности не найден'], 404);
             }
         }
 

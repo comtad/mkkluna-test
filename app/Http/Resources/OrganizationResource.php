@@ -3,21 +3,29 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use OpenApi\Annotations as OA;
 
 /**
  * @OA\Schema(
- *     schema="OrganizationWithBuilding",
- *     title="Organization with Building Info",
- *     description="Организация с информацией о здании",
- *     allOf={
- *         @OA\Schema(ref="#/components/schemas/OrganizationWithPhones"),
- *         @OA\Schema(
- *             @OA\Property(
- *                 property="building",
- *                 ref="#/components/schemas/Building"
- *             )
- *         )
- *     }
+ *     schema="OrganizationResource",
+ *     title="Базовый ресурс организации",
+ *     description="Минимальный набор данных для идентификации организации",
+ *     type="object",
+ *     required={"id", "name"},
+ *     @OA\Property(
+ *         property="id",
+ *         title="Идентификатор организации",
+ *         description="Уникальный числовой идентификатор организации в системе",
+ *         type="integer",
+ *         example=1
+ *     ),
+ *     @OA\Property(
+ *         property="name",
+ *         title="Наименование",
+ *         description="Официальное название организации",
+ *         type="string",
+ *         example="ООО 'Промышленные технологии'"
+ *     )
  * )
  */
 class OrganizationResource extends JsonResource
@@ -27,8 +35,6 @@ class OrganizationResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'phones' => OrganizationPhoneResource::collection($this->phones),
-            'building' => new BuildingResource($this->building)
         ];
     }
 }

@@ -3,18 +3,23 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use OpenApi\Annotations as OA;
 
 /**
  * @OA\Schema(
- *     schema="OrganizationWithPhones",
- *     title="Organization with Phones",
- *     description="Организация с телефонами",
- *     @OA\Property(property="id", type="integer", example=6054),
- *     @OA\Property(property="name", type="string", example="ОАО ЛифтТехПивСбыт"),
+ *     schema="OrganizationWithPhonesResource",
+ *     title="Ресурс организации с телефонами",
+ *     description="Данные организации, включая идентификатор, наименование и список телефонных номеров.",
+ *     type="object",
+ *     allOf={
+ *         @OA\Schema(ref="#/components/schemas/OrganizationResource")
+ *     },
  *     @OA\Property(
  *         property="phones",
+ *         title="Телефоны",
+ *         description="Список телефонных номеров, связанных с организацией.",
  *         type="array",
- *         @OA\Items(ref="#/components/schemas/OrganizationPhone")
+ *         @OA\Items(ref="#/components/schemas/OrganizationPhoneResource")
  *     )
  * )
  */
@@ -22,10 +27,10 @@ class OrganizationWithPhonesResource extends JsonResource
 {
     public function toArray($request)
     {
-        return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'phones' => OrganizationPhoneResource::collection($this->phones),
-        ];
+        $organizationData = OrganizationResource::make($this->resource)->toArray($request);
+
+        return array_merge($organizationData, [
+            'phones' => OrganizationPhoneResource::collection($this->whenLoaded('phones'))
+        ]);
     }
 }

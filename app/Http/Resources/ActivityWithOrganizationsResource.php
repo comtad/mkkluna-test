@@ -2,32 +2,45 @@
 
 namespace App\Http\Resources;
 
-use Illuminate\Http\Resources\Json\JsonResource;
+use OpenApi\Annotations as OA;
 
 /**
  * @OA\Schema(
- *     schema="ActivityWithOrganizations",
- *     title="Activity with Organizations",
- *     description="Вид деятельности с организациями",
- *     @OA\Property(property="id", type="integer", example=5),
- *     @OA\Property(property="name", type="string", example="Рестораны"),
- *     @OA\Property(property="depth", type="integer", example=2),
+ *     schema="ActivityWithOrganizationsResource",
+ *     title="Ресурс вида деятельности с организациями",
+ *     description="Представление вида экономической деятельности с привязанными организациями",
+ *     type="object",
  *     @OA\Property(
- *         property="organizations",
- *         type="array",
- *         @OA\Items(ref="#/components/schemas/OrganizationWithBuilding")
+ *         property="activity",
+ *         title="Данные вида деятельности",
+ *         description="Структура, содержащая основные параметры вида деятельности и связанные организации",
+ *         type="object",
+ *         allOf={
+ *             @OA\Schema(ref="#/components/schemas/ActivityResource"),
+ *             @OA\Schema(
+ *                 @OA\Property(
+ *                     property="organizations",
+ *                     title="Связанные организации",
+ *                     description="Перечень организаций, осуществляющих данный вид экономической деятельности",
+ *                     type="array",
+ *                     @OA\Items(ref="#/components/schemas/OrganizationWithPhonesResource")
+ *                 )
+ *             )
+ *         }
  *     )
  * )
  */
-class ActivityWithOrganizationsResource extends JsonResource
+class ActivityWithOrganizationsResource extends ActivityResource
 {
     public function toArray($request)
     {
+        $data = parent::toArray($request);
+        unset($data['children']);
+
+        $data['organizations'] = OrganizationWithPhonesResource::collection($this->organizations);
+
         return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'depth' => $this->depth,
-            'organizations' => OrganizationResource::collection($this->organizations)
+            'activity' => $data
         ];
     }
 }

@@ -55,27 +55,59 @@ class Activity extends Model
         return $this->belongsToMany(Organization::class);
     }
 
-    public function getDepthAttribute()
-    {
-        return $this->ancestors()->count();
-    }
-
-    public function scopeLimitedDepth($query, $maxDepth = self::MAX_DEPTH)
-    {
-        return $query->with(['children' => function ($q) use ($maxDepth) {
-            if ($maxDepth > 1) {
-                $q->limitedDepth($maxDepth - 1);
-            }
-        }]);
-    }
 
     public function children(): HasMany
     {
         return $this->hasMany(static::class, 'parent_id')->with('children');
     }
 
-    public function getDescendantIds()
+    public static function getDescendantsIdsBatch(array $parentIds): array
     {
-        return $this->descendants()->pluck('id')->push($this->id);
+        if (empty($parentIds)) {
+            return [];
+        }
+
+        $descendants = [];
+        $parents = self::whereIn('id', $parentIds)->get(['id', '_lft', '_rgt']);
+        foreach ($parents as $parent) {
+            $descendants = array_merge($descendants, self::descendantsOf($parent->id)->pluck('id')->toArray()); // Или manual where _lft > parent._lft and _lft < parent._rgt
+        }
+
+        return array_unique($descendants);
+    }
+
+
+
+    // Добавляем отношение для рекурсивной загрузки
+    public function allChildren()
+    {
+        return $this->hasMany(Activity::class, 'parent_id')->with('allChildren');
+    }
+
+    // Оптимизированный метод получения ID потомков
+    public static function getDescendantsIds($id)
+    {
+        return static::where('_lft', '>=', function ($query) use ($id) {
+            $query->select('_lft')
+                ->from('activities')
+                ->where('id', $id);
+        })
+            ->where('_rgt', '<=', function ($query) use ($id) {
+                $query->select('_rgt')
+                    ->from('activities')
+                    ->where('id', $id);
+            })
+            ->pluck('id');
+    }
+
+
+
+    public static function getDepthCache($activities)
+    {
+        $activityIds = $activities->pluck('id')->unique();
+
+        return self::whereIn('id', $activityIds)
+            ->pluck('depth', 'id')
+            ->toArray();
     }
 }

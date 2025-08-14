@@ -15,8 +15,13 @@ return new class extends Migration
             $table->unsignedInteger('_lft')->default(0);
             $table->unsignedInteger('_rgt')->default(0);
             $table->timestamps();
+            $table->unsignedInteger('depth')->default(0)->after('parent_id');
 
-            $table->index(['parent_id', '_lft', '_rgt']);
+            $table->index('_lft');
+            $table->index('_rgt');
+            $table->index('depth');
+            $table->index('parent_id');
+            $table->index(['parent_id', '_lft', '_rgt', 'depth']);
         });
 
         Schema::table('activities', function (Blueprint $table) {
@@ -25,13 +30,5 @@ return new class extends Migration
                 ->on('activities')
                 ->onDelete('cascade');
         });
-    }
-
-    public function down()
-    {
-        Schema::table('activities', function (Blueprint $table) {
-            $table->dropForeign(['parent_id']);
-        });
-        Schema::dropIfExists('activities');
     }
 };

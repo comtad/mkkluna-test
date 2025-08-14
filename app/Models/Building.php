@@ -26,15 +26,12 @@ class Building extends Model
         }
     }
 
-    // Добавляем аксессор для преобразования координат
     public function getCoordinatesAttribute($value)
     {
-        // Если значение уже является объектом Point, возвращаем его
         if ($value instanceof Point) {
             return $value;
         }
 
-        // Если это строка (WKT-формат), преобразуем в объект Point
         if (is_string($value)) {
             return Point::fromWkt($value);
         }
@@ -42,7 +39,6 @@ class Building extends Model
         return $value;
     }
 
-    // Добавляем проверку типа перед доступом к свойствам
     public function getLatAttribute(): ?float
     {
         return $this->coordinates instanceof Point

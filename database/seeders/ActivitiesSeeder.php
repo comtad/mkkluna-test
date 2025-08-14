@@ -34,6 +34,10 @@ class ActivitiesSeeder extends Seeder
             $this->createCategory($category, null, 0);
         });
 
+        // Фиксируем дерево: пакет обновит _lft и _rgt на основе parent_id
+        $fixed = Activity::fixTree();
+        $this->command->info("Дерево зафиксировано, исправлено узлов: {$fixed}");
+
         $this->command->info('Успешно создано дерево видов деятельности');
     }
 
@@ -46,7 +50,8 @@ class ActivitiesSeeder extends Seeder
 
         $activity = Activity::create([
             'name' => $data['name'],
-            'parent_id' => $parent ? $parent->id : null
+            'parent_id' => $parent ? $parent->id : null,
+            'depth' => $depth,  // Сохраняем глубину в базу при создании
         ]);
 
         $this->command->info(str_repeat('  ', $depth) . "Создано: {$activity->name} (глубина: {$depth})");

@@ -1,30 +1,34 @@
 <?php
 
-use App\Http\Controllers\GetBuildingOrganizationsController;
-use App\Http\Controllers\GetOrganizationById;
-use App\Http\Controllers\GetOrganizationsByActivity;
-use App\Http\Controllers\GetOrganizationsByActivityTree;
-use App\Http\Controllers\GetOrganizationsByName;
-use App\Http\Controllers\GetOrganizationsInRadius;
-use App\Http\Controllers\GetOrganizationsInRectangle;
+use App\Http\Controllers\{
+    GetBuildingOrganizationsController,
+    GetOrganizationById,
+    GetOrganizationsByActivity,
+    GetOrganizationsByName,
+    GetOrganizationsInRadius,
+    GetOrganizationsInRectangle,
+    GetOrgsByActivityTreeController
+};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+Route::prefix('organizations')->middleware('api.key')->group(function () {
+    Route::get('activity-tree', GetOrgsByActivityTreeController::class);
+    Route::get('by-name', GetOrganizationsByName::class);
+    Route::get('nearby', GetOrganizationsInRadius::class);
+    Route::get('in-rectangle', GetOrganizationsInRectangle::class);
+    Route::get('by-id', GetOrganizationById::class);
+});
+
+Route::prefix('buildings')->middleware('api.key')->group(function () {
+    Route::get('organizations', GetBuildingOrganizationsController::class);
+});
+
+Route::prefix('activities')->middleware('api.key')->group(function () {
+    Route::get('organizations', GetOrganizationsByActivity::class);
+});
+
+// Системные маршруты
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
-
-Route::get('/buildings/organizations', GetBuildingOrganizationsController::class)
-    ->middleware('api.key');
-Route::get('/activities/organizations', GetOrganizationsByActivity::class)
-    ->middleware('api.key');
-Route::get('/organizations/nearby', GetOrganizationsInRadius::class)
-    ->middleware('api.key');
-Route::get('/organizations/in-rectangle', GetOrganizationsInRectangle::class)
-    ->middleware('api.key');
-Route::get('/organizations/{id}', GetOrganizationById::class)
-    ->middleware('api.key');
-Route::get('/organizations/by-activity-tree', GetOrganizationsByActivityTree::class)
-    ->middleware('api.key');
-Route::get('/organizations/by-name', GetOrganizationsByName::class)
-    ->middleware('api.key');

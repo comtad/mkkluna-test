@@ -22,16 +22,16 @@
         "/api/buildings/organizations": {
             "get": {
                 "tags": [
-                    "Buildings"
+                    "Здания"
                 ],
-                "summary": "Получить организации в здании",
-                "description": "Возвращает информацию о здании со списком всех организаций и их телефонами",
-                "operationId": "getOrganizationsByBuilding",
+                "summary": "Получение списка организаций в здании",
+                "description": "Возвращает данные здания, включая связанные организации и их телефонные номера.",
+                "operationId": "getBuildingOrganizations",
                 "parameters": [
                     {
                         "name": "api_key",
                         "in": "query",
-                        "description": "Ключ доступа API",
+                        "description": "Ключ API для аутентификации.",
                         "required": true,
                         "schema": {
                             "type": "string"
@@ -41,51 +41,34 @@
                     {
                         "name": "building_id",
                         "in": "query",
-                        "description": "ID здания",
+                        "description": "Идентификатор здания.",
                         "required": true,
                         "schema": {
-                            "type": "integer",
-                            "format": "int64"
+                            "type": "integer"
                         },
-                        "example": "3"
+                        "example": 2
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Успешный ответ",
+                        "description": "Успех. Данные здания с организациями",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/BuildingWithOrganizations"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Неверный API ключ",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "example": "Invalid API key"
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/BuildingWithOrganizationsResource"
                                 }
                             }
                         }
                     },
                     "404": {
-                        "description": "Здание не найдено",
+                        "description": "Не найдено",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "error": {
                                             "type": "string",
-                                            "example": "Building not found"
+                                            "example": "Здание не найдено"
                                         }
                                     },
                                     "type": "object"
@@ -124,19 +107,107 @@
                 }
             }
         },
+        "/api/organizations/by-id": {
+            "get": {
+                "tags": [
+                    "Организации"
+                ],
+                "summary": "Получение информации об организации по идентификатору",
+                "description": "Возвращает детальные данные организации, включая телефоны, здание и дерево видов деятельности.",
+                "operationId": "getOrganizationById",
+                "parameters": [
+                    {
+                        "name": "api_key",
+                        "in": "query",
+                        "description": "Ключ API для аутентификации.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "123"
+                    },
+                    {
+                        "name": "id",
+                        "in": "query",
+                        "description": "Идентификатор организации.",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 7
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успех. Детальные данные организации",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FullOrganizationResource"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Не найдено",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Организация не найдена"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Ошибка валидации",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The id field is required."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The id field is required."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/activities/organizations": {
             "get": {
                 "tags": [
-                    "Activities"
+                    "Виды деятельности"
                 ],
-                "summary": "Получить организации по виду деятельности",
-                "description": "Возвращает вид деятельности с организациями, относящимися к нему",
+                "summary": "Получение списка организаций по виду деятельности",
+                "description": "Находит вид деятельности по названию и возвращает связанные организации с телефонными номерами. Сначала выполняется точный поиск, при отсутствии результатов — частичный поиск с сортировкой по длине названия.",
                 "operationId": "getOrganizationsByActivity",
                 "parameters": [
                     {
                         "name": "api_key",
                         "in": "query",
-                        "description": "Ключ доступа API",
+                        "description": "Ключ API для аутентификации.",
                         "required": true,
                         "schema": {
                             "type": "string"
@@ -146,34 +217,35 @@
                     {
                         "name": "activity_name",
                         "in": "query",
-                        "description": "Название вида деятельности",
+                        "description": "Название вида деятельности (минимум 3 символа).",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "minLength": 3
                         },
                         "example": "Рестораны"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Успешный ответ",
+                        "description": "Успех. Данные вида деятельности с организациями",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ActivityWithOrganizations"
+                                    "$ref": "#/components/schemas/ActivityWithOrganizationsResource"
                                 }
                             }
                         }
                     },
-                    "401": {
-                        "description": "Неверный API ключ",
+                    "404": {
+                        "description": "Не найдено",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "error": {
                                             "type": "string",
-                                            "example": "Invalid API key"
+                                            "example": "Вид деятельности не найден"
                                         }
                                     },
                                     "type": "object"
@@ -181,15 +253,103 @@
                             }
                         }
                     },
-                    "404": {
-                        "description": "Вид деятельности не найден",
+                    "422": {
+                        "description": "Ошибка валидации",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "error": {
+                                        "message": {
                                             "type": "string",
-                                            "example": "Activity not found"
+                                            "example": "The activity name must be at least 3 characters."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "activity_name": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The activity name must be at least 3 characters."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/organizations/by-name": {
+            "get": {
+                "tags": [
+                    "Организации"
+                ],
+                "summary": "Поиск организаций по названию",
+                "description": "Находит организации, название которых содержит указанную строку (минимум 3 символа). Возвращает список организаций с телефонами и данными здания. Если ничего не найдено, возвращается пустой список.",
+                "operationId": "getOrganizationsByName",
+                "parameters": [
+                    {
+                        "name": "api_key",
+                        "in": "query",
+                        "description": "Ключ API для аутентификации.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "123"
+                    },
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "description": "Часть названия организации (минимум 3 символа).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "minLength": 3
+                        },
+                        "example": "Рем"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успех. Список организаций (может быть пустым)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/OrganizationResource"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Ошибка валидации",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Название должно содержать минимум 3 символа."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "name": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "Название должно содержать минимум 3 символа."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -203,16 +363,16 @@
         "/api/organizations/nearby": {
             "get": {
                 "tags": [
-                    "Geosearch"
+                    "Организации"
                 ],
-                "summary": "Поиск организаций в радиусе от точки",
-                "description": "Возвращает организации, находящиеся в указанном радиусе (в метрах) от заданной точки",
+                "summary": "Поиск организаций в заданном радиусе",
+                "description": "Находит организации, расположенные в указанном радиусе от заданной географической точки. Возвращает список организаций с телефонными номерами.",
                 "operationId": "getOrganizationsInRadius",
                 "parameters": [
                     {
                         "name": "api_key",
                         "in": "query",
-                        "description": "Ключ доступа API",
+                        "description": "Ключ API для аутентификации.",
                         "required": true,
                         "schema": {
                             "type": "string"
@@ -222,51 +382,70 @@
                     {
                         "name": "lat",
                         "in": "query",
-                        "description": "Широта центра поиска",
+                        "description": "Широта центральной точки (от -90 до 90).",
                         "required": true,
                         "schema": {
                             "type": "number",
-                            "format": "float"
+                            "maximum": 90,
+                            "minimum": -90
                         },
-                        "example": "55.6938523"
+                        "example": 55.7069
                     },
                     {
                         "name": "lng",
                         "in": "query",
-                        "description": "Долгота центра поиска",
+                        "description": "Долгота центральной точки (от -180 до 180).",
                         "required": true,
                         "schema": {
                             "type": "number",
-                            "format": "float"
+                            "maximum": 180,
+                            "minimum": -180
                         },
-                        "example": "37.4527517"
+                        "example": 37.5422026
                     },
                     {
                         "name": "radius",
                         "in": "query",
-                        "description": "Радиус поиска в метрах",
+                        "description": "Радиус поиска в метрах (минимум 0).",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "integer",
+                            "minimum": 0
                         },
-                        "example": "5000"
+                        "example": 1000
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Успешный ответ",
+                        "description": "Успех. Список организаций",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/components/schemas/OrganizationWithBuilding"
+                                        "$ref": "#/components/schemas/OrganizationWithPhonesResource"
                                     }
                                 }
                             }
                         }
                     },
-                    "400": {
+                    "404": {
+                        "description": "Не найдено",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Организации не найдены"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
                         "description": "Ошибка валидации",
                         "content": {
                             "application/json": {
@@ -275,22 +454,18 @@
                                         "message": {
                                             "type": "string",
                                             "example": "The lat field is required."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Неверный API ключ",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "example": "Invalid API key"
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "lat": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The lat field is required."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -304,16 +479,16 @@
         "/api/organizations/in-rectangle": {
             "get": {
                 "tags": [
-                    "Geosearch"
+                    "Организации"
                 ],
                 "summary": "Поиск организаций в прямоугольной области",
-                "description": "Возвращает организации, находящиеся в пределах прямоугольной области, заданной юго-западной и северо-восточной точками",
+                "description": "Находит организации, расположенные в указанной прямоугольной области на карте (bounding box). Возвращает список организаций с телефонными номерами.",
                 "operationId": "getOrganizationsInRectangle",
                 "parameters": [
                     {
                         "name": "api_key",
                         "in": "query",
-                        "description": "Ключ доступа API",
+                        "description": "Ключ API для аутентификации.",
                         "required": true,
                         "schema": {
                             "type": "string"
@@ -323,71 +498,75 @@
                     {
                         "name": "sw_lat",
                         "in": "query",
-                        "description": "Широта юго-западного угла",
+                        "description": "Широта юго-западного угла области (от -90 до 90).",
                         "required": true,
                         "schema": {
                             "type": "number",
-                            "format": "float"
+                            "maximum": 90,
+                            "minimum": -90
                         },
-                        "example": "55.6688523"
+                        "example": 55.7
                     },
                     {
                         "name": "sw_lng",
                         "in": "query",
-                        "description": "Долгота юго-западного угла",
+                        "description": "Долгота юго-западного угла области (от -180 до 180).",
                         "required": true,
                         "schema": {
                             "type": "number",
-                            "format": "float"
+                            "maximum": 180,
+                            "minimum": -180
                         },
-                        "example": "37.4277517"
+                        "example": 37.5
                     },
                     {
                         "name": "ne_lat",
                         "in": "query",
-                        "description": "Широта северо-восточного угла",
+                        "description": "Широта северо-восточного угла области (от -90 до 90).",
                         "required": true,
                         "schema": {
                             "type": "number",
-                            "format": "float"
+                            "maximum": 90,
+                            "minimum": -90
                         },
-                        "example": "55.7188523"
+                        "example": 55.8
                     },
                     {
                         "name": "ne_lng",
                         "in": "query",
-                        "description": "Долгота северо-восточного угла",
+                        "description": "Долгота северо-восточного угла области (от -180 до 180).",
                         "required": true,
                         "schema": {
                             "type": "number",
-                            "format": "float"
+                            "maximum": 180,
+                            "minimum": -180
                         },
-                        "example": "37.4777517"
+                        "example": 37.6
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Успешный ответ",
+                        "description": "Успех. Список организаций",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/components/schemas/OrganizationWithBuilding"
+                                        "$ref": "#/components/schemas/OrganizationWithPhonesResource"
                                     }
                                 }
                             }
                         }
                     },
-                    "400": {
-                        "description": "Ошибка валидации",
+                    "404": {
+                        "description": "Не найдено",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "message": {
+                                        "error": {
                                             "type": "string",
-                                            "example": "The sw_lat field is required."
+                                            "example": "Организации не найдены"
                                         }
                                     },
                                     "type": "object"
@@ -395,15 +574,120 @@
                             }
                         }
                     },
-                    "401": {
-                        "description": "Неверный API ключ",
+                    "422": {
+                        "description": "Ошибка валидации",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The sw lat field is required."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "sw_lat": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The sw lat field is required."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/organizations/activity-tree": {
+            "get": {
+                "tags": [
+                    "Организации"
+                ],
+                "summary": "Поиск организаций по иерархии видов деятельности",
+                "description": "Находит организации, связанные с видом деятельности и всеми его потомками. Возвращает организации с телефонами, зданиями и деревом видов деятельности.",
+                "operationId": "getOrgsByActivityTree",
+                "parameters": [
+                    {
+                        "name": "api_key",
+                        "in": "query",
+                        "description": "Ключ API для аутентификации.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "123"
+                    },
+                    {
+                        "name": "activity_name",
+                        "in": "query",
+                        "description": "Название вида деятельности (минимум 3 символа). Например: 'вет' для ветеринарии.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 255,
+                            "minLength": 3
+                        },
+                        "example": "вет"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успех. Организации с деревом видов деятельности",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/FullOrganizationResource"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Не найдено",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "error": {
                                             "type": "string",
-                                            "example": "Invalid API key"
+                                            "example": "Виды деятельности не найдены"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Ошибка валидации",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The activity name must be at least 3 characters."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "activity_name": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The activity name must be at least 3 characters."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -417,80 +701,124 @@
     },
     "components": {
         "schemas": {
-            "ActivityTree": {
-                "title": "Activity Tree",
-                "description": "Дерево видов деятельности с вложенными элементами",
+            "ActivityResource": {
+                "title": "Ресурс вида деятельности",
+                "description": "Структура данных, представляющая вид экономической деятельности с иерархической организацией",
+                "required": [
+                    "id",
+                    "name",
+                    "depth"
+                ],
                 "properties": {
                     "id": {
+                        "title": "Идентификатор",
+                        "description": "Уникальный числовой идентификатор вида деятельности",
                         "type": "integer",
                         "example": 1
                     },
                     "name": {
+                        "title": "Наименование",
+                        "description": "Официальное название вида экономической деятельности",
                         "type": "string",
-                        "example": "Рестораны"
+                        "example": "Производство промышленного оборудования"
                     },
                     "depth": {
+                        "title": "Уровень вложенности",
+                        "description": "Порядковый уровень в иерархической структуре видов деятельности (0 - корневой уровень)",
                         "type": "integer",
                         "example": 0
                     },
                     "children": {
-                        "description": "Дочерние элементы дерева",
+                        "title": "Дочерние элементы",
+                        "description": "Массив подчиненных видов деятельности в иерархической структуре (рекурсивная структура)",
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/ActivityTree"
+                            "$ref": "#/components/schemas/ActivityResource"
                         }
                     }
                 },
                 "type": "object"
             },
-            "ActivityWithOrganizations": {
-                "title": "Activity with Organizations",
-                "description": "Вид деятельности с организациями",
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "example": 5
+            "ActivityWithOrganizationsResource": {
+                "title": "Ресурс вида деятельности с организациями",
+                "description": "Представление вида экономической деятельности с привязанными организациями",
+                "type": "object",
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/ActivityResource"
                     },
-                    "name": {
-                        "type": "string",
-                        "example": "Рестораны"
-                    },
-                    "depth": {
-                        "type": "integer",
-                        "example": 2
-                    },
-                    "organizations": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/OrganizationWithBuilding"
-                        }
+                    {
+                        "properties": {
+                            "activity": {
+                                "title": "Данные вида деятельности",
+                                "description": "Структура, содержащая основные параметры вида деятельности и связанные организации",
+                                "type": "object",
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/ActivityResource"
+                                    },
+                                    {
+                                        "properties": {
+                                            "organizations": {
+                                                "title": "Связанные организации",
+                                                "description": "Перечень организаций, осуществляющих данный вид экономической деятельности",
+                                                "type": "array",
+                                                "items": {
+                                                    "$ref": "#/components/schemas/OrganizationWithPhonesResource"
+                                                }
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                ]
+                            }
+                        },
+                        "type": "object"
                     }
-                },
-                "type": "object"
+                ]
             },
-            "Building": {
-                "title": "Building Info",
-                "description": "Информация о здании",
+            "BuildingResource": {
+                "title": "Ресурс здания",
+                "description": "Структура данных, представляющая информацию о здании",
+                "required": [
+                    "id",
+                    "address",
+                    "coordinates"
+                ],
                 "properties": {
                     "id": {
+                        "title": "Идентификатор здания",
+                        "description": "Уникальный числовой идентификатор объекта недвижимости",
                         "type": "integer",
-                        "example": 3
+                        "example": 1
                     },
                     "address": {
+                        "title": "Адрес",
+                        "description": "Физический адрес местонахождения здания",
                         "type": "string",
-                        "example": "г. Москва, Очаковское шоссе, дом 14, строение 8"
+                        "example": "ул. Тверская, 15"
                     },
                     "coordinates": {
+                        "title": "Географические координаты",
+                        "description": "Геопозиция здания в системе координат WGS 84",
+                        "required": [
+                            "lat",
+                            "lng"
+                        ],
                         "properties": {
                             "lat": {
+                                "title": "Широта",
+                                "description": "Географическая широта в десятичных градусах",
                                 "type": "number",
                                 "format": "float",
-                                "example": 55.6938523
+                                "example": 55.7558
                             },
                             "lng": {
+                                "title": "Долгота",
+                                "description": "Географическая долгота в десятичных градусах",
                                 "type": "number",
                                 "format": "float",
-                                "example": 37.4527517
+                                "example": 37.6173
                             }
                         },
                         "type": "object"
@@ -498,108 +826,150 @@
                 },
                 "type": "object"
             },
-            "BuildingWithOrganizations": {
-                "title": "Building with Organizations",
-                "description": "Информация о здании с организациями",
+            "BuildingWithOrganizationsResource": {
+                "title": "Ресурс здания с организациями",
+                "description": "Структура данных, представляющая информацию о здании с привязанными организациями",
+                "properties": {
+                    "building": {
+                        "title": "Данные здания",
+                        "description": "Объект, содержащий информацию о здании и связанных с ним организациях",
+                        "type": "object",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/BuildingResource"
+                            },
+                            {
+                                "properties": {
+                                    "organizations": {
+                                        "title": "Организации в здании",
+                                        "description": "Список организаций, размещенных в данном здании",
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/components/schemas/OrganizationWithPhonesResource"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "FullOrganizationResource": {
+                "title": "Полный ресурс организации",
+                "description": "Комплексное представление данных об организации",
+                "properties": {
+                    "organization": {
+                        "title": "Данные организации",
+                        "description": "Объект, содержащий полную информацию об организации",
+                        "type": "object",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/OrganizationResource"
+                            },
+                            {
+                                "required": [
+                                    "phones",
+                                    "building",
+                                    "activities"
+                                ],
+                                "properties": {
+                                    "phones": {
+                                        "title": "Контактные телефоны",
+                                        "description": "Список контактных номеров телефонов организации",
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/components/schemas/OrganizationPhoneResource"
+                                        }
+                                    },
+                                    "building": {
+                                        "$ref": "#/components/schemas/BuildingResource"
+                                    },
+                                    "activities": {
+                                        "title": "Виды деятельности",
+                                        "description": "Перечень видов экономической деятельности организации",
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/components/schemas/ActivityResource"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "OrganizationPhoneResource": {
+                "title": "Ресурс телефонного номера организации",
+                "description": "Представление контактного телефонного номера организации",
+                "required": [
+                    "id",
+                    "number"
+                ],
+                "properties": {
+                    "id": {
+                        "title": "Идентификатор",
+                        "description": "Уникальный числовой идентификатор телефонного номера",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "number": {
+                        "title": "Номер телефона",
+                        "description": "Контактный телефонный номер в международном или национальном формате",
+                        "type": "string",
+                        "example": "+7 (495) 123-45-67"
+                    }
+                },
+                "type": "object"
+            },
+            "OrganizationResource": {
+                "title": "Базовый ресурс организации",
+                "description": "Минимальный набор данных для идентификации организации",
+                "required": [
+                    "id",
+                    "name"
+                ],
+                "properties": {
+                    "id": {
+                        "title": "Идентификатор организации",
+                        "description": "Уникальный числовой идентификатор организации в системе",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "title": "Наименование",
+                        "description": "Официальное название организации",
+                        "type": "string",
+                        "example": "ООО 'Промышленные технологии'"
+                    }
+                },
+                "type": "object"
+            },
+            "OrganizationWithPhonesResource": {
+                "title": "Ресурс организации с телефонами",
+                "description": "Данные организации, включая идентификатор, наименование и список телефонных номеров.",
+                "type": "object",
                 "allOf": [
                     {
-                        "$ref": "#/components/schemas/Building"
+                        "$ref": "#/components/schemas/OrganizationResource"
                     },
                     {
                         "properties": {
-                            "organizations": {
+                            "phones": {
+                                "title": "Телефоны",
+                                "description": "Список телефонных номеров, связанных с организацией.",
                                 "type": "array",
                                 "items": {
-                                    "$ref": "#/components/schemas/OrganizationWithPhones"
+                                    "$ref": "#/components/schemas/OrganizationPhoneResource"
                                 }
                             }
                         },
                         "type": "object"
                     }
                 ]
-            },
-            "FullOrganization": {
-                "title": "Full Organization Info",
-                "description": "Полная информация об организации с отношениями",
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "example": 6054
-                    },
-                    "name": {
-                        "type": "string",
-                        "example": "ООО Рога и Копыта"
-                    },
-                    "phones": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/OrganizationPhone"
-                        }
-                    },
-                    "building": {
-                        "$ref": "#/components/schemas/Building"
-                    },
-                    "activities": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/ActivityTree"
-                        }
-                    }
-                },
-                "type": "object"
-            },
-            "OrganizationPhone": {
-                "title": "Organization Phone",
-                "description": "Телефон организации",
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "example": 12152
-                    },
-                    "number": {
-                        "type": "string",
-                        "example": "(35222) 72-6391"
-                    }
-                },
-                "type": "object"
-            },
-            "OrganizationWithBuilding": {
-                "title": "Organization with Building Info",
-                "description": "Организация с информацией о здании",
-                "allOf": [
-                    {
-                        "$ref": "#/components/schemas/OrganizationWithPhones"
-                    },
-                    {
-                        "properties": {
-                            "building": {
-                                "$ref": "#/components/schemas/Building"
-                            }
-                        },
-                        "type": "object"
-                    }
-                ]
-            },
-            "OrganizationWithPhones": {
-                "title": "Organization with Phones",
-                "description": "Организация с телефонами",
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "example": 6054
-                    },
-                    "name": {
-                        "type": "string",
-                        "example": "ОАО ЛифтТехПивСбыт"
-                    },
-                    "phones": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/OrganizationPhone"
-                        }
-                    }
-                },
-                "type": "object"
             }
         },
         "securitySchemes": {
@@ -612,16 +982,16 @@
     },
     "tags": [
         {
-            "name": "Buildings",
-            "description": "Buildings"
+            "name": "Здания",
+            "description": "Здания"
         },
         {
-            "name": "Activities",
-            "description": "Activities"
+            "name": "Организации",
+            "description": "Организации"
         },
         {
-            "name": "Geosearch",
-            "description": "Geosearch"
+            "name": "Виды деятельности",
+            "description": "Виды деятельности"
         }
     ]
 }
