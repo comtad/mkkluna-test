@@ -53,7 +53,7 @@ php artisan migrate --seed
 [http://localhost/api/organizations/in-rectangle?api_key=123&sw_lat=55.7&sw_lng=37.5&ne_lat=55.8&ne_lng=37.6](http://localhost/api/organizations/in-rectangle?api_key=123&sw_lat=55.7&sw_lng=37.5&ne_lat=55.8&ne_lng=37.6)
 
 ## Информация об организации по идентификатору
-[http://localhost/api/organizations/by-id?id=7&api_key=123](http://localhost/api/organizations/by-id?id=7&api_key=123)
+[http://localhost/api/organizations/by-id?id=3022&api_key=123](http://localhost/api/organizations/by-id?id=3022&api_key=123)
 
 ## Поиск по виду деятельности с учётом вложенных категорий
 [http://localhost/api/organizations/activity-tree?api_key=123&activity_name=рест](http://localhost/api/organizations/activity-tree?api_key=123&activity_name=рест)
