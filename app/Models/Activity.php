@@ -77,14 +77,11 @@ class Activity extends Model
     }
 
 
-
-    // Добавляем отношение для рекурсивной загрузки
     public function allChildren()
     {
         return $this->hasMany(Activity::class, 'parent_id')->with('allChildren');
     }
 
-    // Оптимизированный метод получения ID потомков
     public static function getDescendantsIds($id)
     {
         return static::where('_lft', '>=', function ($query) use ($id) {

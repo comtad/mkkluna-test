@@ -112,14 +112,14 @@
                 "tags": [
                     "Организации"
                 ],
-                "summary": "Получение информации об организации по идентификатору",
-                "description": "Возвращает детальные данные организации, включая телефоны, здание и дерево видов деятельности.",
+                "summary": "Получение полной информации об организации по ID",
+                "description": "Возвращает детализированные данные организации, включая контактные телефоны, информацию о здании и иерархическое дерево видов деятельности",
                 "operationId": "getOrganizationById",
                 "parameters": [
                     {
                         "name": "api_key",
                         "in": "query",
-                        "description": "Ключ API для аутентификации.",
+                        "description": "API-ключ для аутентификации",
                         "required": true,
                         "schema": {
                             "type": "string"
@@ -129,17 +129,17 @@
                     {
                         "name": "id",
                         "in": "query",
-                        "description": "Идентификатор организации.",
+                        "description": "Уникальный идентификатор организации",
                         "required": true,
                         "schema": {
                             "type": "integer"
                         },
-                        "example": 7
+                        "example": 3022
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Успех. Детальные данные организации",
+                        "description": "Успешный запрос",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -149,7 +149,7 @@
                         }
                     },
                     "404": {
-                        "description": "Не найдено",
+                        "description": "Организация не найдена",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -172,7 +172,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "The id field is required."
+                                            "example": "The given data was invalid."
                                         },
                                         "errors": {
                                             "properties": {
@@ -860,21 +860,24 @@
                 "title": "Полный ресурс организации",
                 "description": "Комплексное представление данных об организации",
                 "properties": {
-                    "organization": {
-                        "title": "Данные организации",
-                        "description": "Объект, содержащий полную информацию об организации",
-                        "type": "object",
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/OrganizationResource"
-                            },
-                            {
-                                "required": [
-                                    "phones",
-                                    "building",
-                                    "activities"
-                                ],
+                    "data": {
+                        "title": "Контейнер данных",
+                        "description": "Объект-контейнер для данных организации",
+                        "properties": {
+                            "organization": {
+                                "title": "Данные организации",
+                                "description": "Объект, содержащий полную информацию об организации",
                                 "properties": {
+                                    "id": {
+                                        "title": "Идентификатор",
+                                        "type": "integer",
+                                        "example": 3022
+                                    },
+                                    "name": {
+                                        "title": "Наименование",
+                                        "type": "string",
+                                        "example": "ПАО Cиб"
+                                    },
                                     "phones": {
                                         "title": "Контактные телефоны",
                                         "description": "Список контактных номеров телефонов организации",
@@ -888,7 +891,7 @@
                                     },
                                     "activities": {
                                         "title": "Виды деятельности",
-                                        "description": "Перечень видов экономической деятельности организации",
+                                        "description": "Иерархическое дерево видов экономической деятельности организации",
                                         "type": "array",
                                         "items": {
                                             "$ref": "#/components/schemas/ActivityResource"
@@ -897,7 +900,8 @@
                                 },
                                 "type": "object"
                             }
-                        ]
+                        },
+                        "type": "object"
                     }
                 },
                 "type": "object"
